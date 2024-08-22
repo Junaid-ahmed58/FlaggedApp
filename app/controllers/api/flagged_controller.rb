@@ -7,9 +7,11 @@ module Api
       @flagged = Flagged.new(flaggable: @flaggable, flagger: @flagger)
 
       if @flagged.save
-        render json: @flagged, status: :created
+        byebug
+        @flaggable.update(flagged: true)
+        render json: { message: "#{@flagger.class.name} flagged #{@flaggable.class.name} successfully." }, status: :ok
       else
-        render json: @flagged.errors, status: :unprocessable_entity
+        render json: { error: "Flagging failed." }, status: :unprocessable_entity
       end
     end
 
