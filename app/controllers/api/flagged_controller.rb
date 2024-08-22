@@ -4,10 +4,14 @@ module Api
     before_action :find_flaggable, only: [:create]
 
     def create
+      if @flaggable.nil?
+        render json: { error: "Flaggable not found." }, status: :not_found
+        return
+      end
+
       @flagged = Flagged.new(flaggable: @flaggable, flagger: @flagger)
 
       if @flagged.save
-        byebug
         @flaggable.update(flagged: true)
         render json: { message: "#{@flagger.class.name} flagged #{@flaggable.class.name} successfully." }, status: :ok
       else
@@ -18,13 +22,23 @@ module Api
     private
 
     def find_flagger
-      flagger_type = params[:flagger_type].capitalize
-      @flagger = flagger_type.constantize.find(params[:flagger_id])
+      begin
+        flagger_type = params[:flagger_type].capitalize
+        @flagger = flagger_type.constantize.find(params[:flagger_id])
+
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: "Flagger with ID #{params[:flagger_id]} not found." }, status: :unprocessable_entity
+      end
     end
 
     def find_flaggable
-      flaggable_type = params[:flaggable_type].capitalize
-      @flaggable = flaggable_type.constantize.find(params[:flaggable_id])
+      begin
+        flaggable_type = params[:flaggable_type].capitalize
+        @flaggable = flaggable_type.constantize.find(params[:flaggable_id])
+
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: "Flaggable with ID #{params[:flaggable_id]} not found." }, status: :unprocessable_entity
+      end
     end
   end
 end
