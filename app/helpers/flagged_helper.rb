@@ -1,0 +1,2 @@
+module FlaggedHelper
+end
